@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 185 150" width="185" height="150">
+	<style>
+		tspan { white-space:pre }
+		.shp0 { fill: #ffffff;stroke: #000100;stroke-width: 1.889 } 
+		.shp1 { fill: #1fa800 } 
+		.shp2 { fill: #005ec3 } 
+		.shp3 { fill: #ffffff } 
+		.shp4 { fill: #e80300 } 
+	</style>
+	<g id="Layer">
+		<path id="Layer" fill-rule="evenodd" class="shp0" d="M56 2.14L129.75 2.14C159.33 2.14 183.36 26.09 183.36 55.59L183.36 94.16C183.36 123.66 159.33 147.61 129.75 147.61L56 147.61C26.43 147.61 2.39 123.66 2.39 94.16L2.39 55.71C2.39 26.09 26.43 2.14 56 2.14L56 2.14Z" />
+		<path id="Layer" fill-rule="evenodd" class="shp1" d="M40.9 35.42L144.98 35.42C153.41 46.39 158.32 60 158.32 74.87C158.32 93.53 150.52 110.29 137.93 122.27L47.95 122.27C35.36 110.42 27.56 93.53 27.56 74.87L27.56 74.87C27.56 60.13 32.47 46.39 40.9 35.42L40.9 35.42Z" />
+		<path id="Layer" fill-rule="evenodd" class="shp2" d="M31.71 52.06L154.17 52.06C144.85 27.35 120.94 9.71 92.88 9.71C64.81 9.71 41.03 27.35 31.71 52.06L31.71 52.06Z" />
+		<g id="Layer">
+			<path id="Layer" class="shp3" d="M24.79 50.42L162.47 50.42L162.47 53.7L24.79 53.7L24.79 50.42Z" />
+		</g>
+		<path id="Layer" fill-rule="evenodd" class="shp4" d="M154.8 95.92L30.96 95.92C39.64 121.64 64.06 140.17 92.88 140.17C121.7 140.17 146.11 121.64 154.8 95.92L154.8 95.92Z" />
+		<g id="Layer">
+			<path id="Layer" class="shp3" d="M24.04 94.29L163.23 94.29L163.23 97.56L24.04 97.56L24.04 94.29Z" />
+		</g>
+	</g>
+</svg>
