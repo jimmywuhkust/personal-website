@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Jimmy Wu 胡駿銘</title>
+    <!-- SPA redirect: deep links on GitHub Pages land here (404), then bounce
+         back into the app with the path preserved in the query string.
+         index.html decodes it. Standard spa-github-pages pattern. -->
+    <script type="text/javascript">
+      var pathSegmentsToKeep = 0 // custom domain serves from root
+      var l = window.location
+      l.replace(
+        l.protocol +
+          '//' +
+          l.hostname +
+          (l.port ? ':' + l.port : '') +
+          l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') +
+          '/?/' +
+          l.pathname
+            .slice(1)
+            .split('/')
+            .slice(pathSegmentsToKeep)
+            .join('/')
+            .replace(/&/g, '~and~') +
+          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash,
+      )
+    </script>
+  </head>
+  <body></body>
+</html>

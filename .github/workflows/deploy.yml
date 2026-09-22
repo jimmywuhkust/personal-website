@@ -32,6 +32,29 @@ jobs:
           path: dist
           retention-days: 7
 
+  # Live site: every push to main publishes dist/ to GitHub Pages
+  # (served at https://me.jimmywu.hk via the CNAME file in public/).
+  pages:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
