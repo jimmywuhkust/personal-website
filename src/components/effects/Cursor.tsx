@@ -3,21 +3,126 @@ import { useTheme } from '../../hooks/theme'
 
 const INTERACTIVE = 'a, button, [role="button"], input, textarea, select, summary, [data-cursor]'
 const PAD = 5 // px outset around the hovered element
+const N = 28 // perimeter sample points of the ring
+
+type Pt = { x: number; y: number }
+
+function circlePts(cx: number, cy: number, r: number): Pt[] {
+  const pts: Pt[] = []
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2
+    pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r })
+  }
+  return pts
+}
+
+/** Distribute N points evenly along a quadrilateral's perimeter. */
+function quadPts(corners: Pt[]): Pt[] {
+  const pts: Pt[] = []
+  const lens = corners.map((c, i) => {
+    const b = corners[(i + 1) % 4]
+    return Math.hypot(b.x - c.x, b.y - c.y)
+  })
+  const total = lens.reduce((s, l) => s + l, 0) || 1
+  for (let i = 0; i < N; i++) {
+    let d = (i / N) * total
+    let ei = 0
+    while (ei < 3 && d > lens[ei]) {
+      d -= lens[ei]
+      ei++
+    }
+    const a = corners[ei]
+    const b = corners[(ei + 1) % 4]
+    const t = lens[ei] ? d / lens[ei] : 0
+    pts.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t })
+  }
+  return pts
+}
+
+/**
+ * The element's border-box corners in viewport coordinates, honouring its OWN
+ * transform — including 3D perspective tilts (TiltCard), scales and rotations.
+ * For untransformed elements this is just the bounding rect.
+ * (Assumes no transformed/fixed ancestors, which holds for this site.)
+ */
+function shapeCorners(el: HTMLElement): Pt[] {
+  const r = el.getBoundingClientRect()
+  const t = getComputedStyle(el).transform
+  if (!t || t === 'none') {
+    return [
+      { x: r.left - PAD, y: r.top - PAD },
+      { x: r.right + PAD, y: r.top - PAD },
+      { x: r.right + PAD, y: r.bottom + PAD },
+      { x: r.left - PAD, y: r.bottom + PAD },
+    ]
+  }
+  // untransformed border-box origin, in viewport coords
+  let x = el.offsetLeft
+  let y = el.offsetTop
+  let p = el.offsetParent as HTMLElement | null
+  let fixed = false
+  while (p) {
+    x += p.offsetLeft
+    y += p.offsetTop
+    if (getComputedStyle(p).position === 'fixed') fixed = true
+    p = p.offsetParent as HTMLElement | null
+  }
+  if (!fixed) {
+    x -= window.scrollX
+    y -= window.scrollY
+  }
+  const m = new DOMMatrix(t)
+  const cs = getComputedStyle(el)
+  const [ox, oy] = cs.transformOrigin.split(' ').map(parseFloat)
+  const w = el.offsetWidth
+  const h = el.offsetHeight
+  const project = (cx: number, cy: number): Pt => {
+    const pt = m.transformPoint(new DOMPoint(cx - ox, cy - oy))
+    const dw = pt.w || 1
+    return { x: x + ox + pt.x / dw, y: y + oy + pt.y / dw }
+  }
+  // outset each corner away from the quad centre by PAD
+  const raw = [project(0, 0), project(w, 0), project(w, h), project(0, h)]
+  const c = {
+    x: raw.reduce((s, p2) => s + p2.x, 0) / 4,
+    y: raw.reduce((s, p2) => s + p2.y, 0) / 4,
+  }
+  return raw.map((p2) => {
+    const dx = p2.x - c.x
+    const dy = p2.y - c.y
+    const len = Math.hypot(dx, dy) || 1
+    return { x: p2.x + (dx / len) * PAD, y: p2.y + (dy / len) * PAD }
+  })
+}
+
+/** Nearest element that actually has a transform, else the interactive target. */
+function visualShapeOf(deep: HTMLElement | null, target: HTMLElement): HTMLElement {
+  let el: HTMLElement | null = deep
+  while (el && el !== target.parentElement) {
+    const t = getComputedStyle(el).transform
+    if (t && t !== 'none') return el
+    if (el === target) break
+    el = el.parentElement
+  }
+  return target
+}
 
 /**
  * Custom cursor accent.
  * - A brand-colored dot glued to the pointer.
- * - A ring that floats behind it — and when the pointer moves over something
- *   interactive, the ring MORPHS onto that element: it glides to the element's
- *   position, size and border-radius, becoming its outline. It stays glued to
- *   the element while the page scrolls, then melts back into a circle.
- * - Clicking anywhere spawns a ripple shockwave (even on empty space), and the
- *   dot pops on press.
+ * - A ring drawn as an SVG path through 28 sample points. Over interactive
+ *   elements it MORPHS into that element's true outline — including live 3D
+ *   tilt: the corners are projected through the element's own transform
+ *   matrix every frame, so the ring hugs the tilted card exactly, not its
+ *   axis-aligned DOM box. Shapes interpolate point-by-point, so the ring
+ *   flows fluidly between a circle and any quad.
+ * - Clicking anywhere spawns a ripple shockwave; the dot pops on press.
  * Desktop pointers only; renders nothing on touch or reduced-motion.
  */
 export default function Cursor() {
   const dotRef = useRef<HTMLDivElement>(null)
-  const ringRef = useRef<HTMLDivElement>(null)
+  const pathRef = useRef<SVGPathElement>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
   const layerRef = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
 
@@ -25,28 +130,36 @@ export default function Cursor() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
     const dot = dotRef.current
-    const ring = ringRef.current
+    const path = pathRef.current
+    const svg = svgRef.current
     const layer = layerRef.current
-    if (!dot || !ring || !layer) return
+    if (!dot || !path || !svg || !layer) return
 
     let raf = 0
     const pointer = { x: -100, y: -100 }
     const pos = { x: -100, y: -100 }
+    let ring: Pt[] = circlePts(-100, -100, 16)
     let target: HTMLElement | null = null
+    let deep: HTMLElement | null = null
     let pressing = false
 
-    const ringTransition = 'left 0.22s cubic-bezier(0.22,1,0.36,1), top 0.22s cubic-bezier(0.22,1,0.36,1), width 0.22s cubic-bezier(0.22,1,0.36,1), height 0.22s cubic-bezier(0.22,1,0.36,1), border-radius 0.22s cubic-bezier(0.22,1,0.36,1), border-color 0.2s, opacity 0.2s'
+    const onResize = () => {
+      svg.setAttribute('width', String(window.innerWidth))
+      svg.setAttribute('height', String(window.innerHeight))
+    }
+    onResize()
+    window.addEventListener('resize', onResize)
 
     const onMove = (e: PointerEvent) => {
       pointer.x = e.clientX
       pointer.y = e.clientY
-      const el = (e.target as HTMLElement | null)?.closest?.(INTERACTIVE) as HTMLElement | null
+      deep = e.target as HTMLElement | null
+      const el = deep?.closest?.(INTERACTIVE) as HTMLElement | null
       target = el && el.isConnected ? el : null
     }
 
     const onDown = (e: PointerEvent) => {
       pressing = true
-      // ripple shockwave at the click point — works even on empty space
       const rip = document.createElement('div')
       rip.className = 'cursor-ripple'
       rip.style.left = `${e.clientX}px`
@@ -57,7 +170,6 @@ export default function Cursor() {
     const onUp = () => {
       pressing = false
     }
-    // pointer leaving the window — hide everything
     const onLeave = () => {
       pointer.x = -100
       pointer.y = -100
@@ -69,43 +181,41 @@ export default function Cursor() {
     document.documentElement.addEventListener('pointerleave', onLeave)
 
     const tick = () => {
-      // dot rides the pointer, squashed a little while pressing
       dot.style.transform = `translate(${pointer.x}px, ${pointer.y}px) translate(-50%, -50%) scale(${pressing ? 2.2 : 1})`
       dot.style.opacity = pointer.x < 0 ? '0' : '1'
 
+      let want: Pt[]
       if (target && target.isConnected) {
-        // morph: become the element's outline
-        const r = target.getBoundingClientRect()
-        const radius = window.getComputedStyle(target).borderRadius
-        ring.style.transition = ringTransition
-        ring.style.left = `${r.left - PAD}px`
-        ring.style.top = `${r.top - PAD}px`
-        ring.style.width = `${r.width + PAD * 2}px`
-        ring.style.height = `${r.height + PAD * 2}px`
-        ring.style.borderRadius = radius === '0px' ? '6px' : radius
-        ring.style.opacity = '0.9'
-        // keep the free-follow position in sync so the melt-back starts nearby
-        pos.x = r.left + r.width / 2
-        pos.y = r.top + r.height / 2
+        const shape = visualShapeOf(deep, target)
+        want = quadPts(shapeCorners(shape))
+        const c = shapeCorners(shape)
+        pos.x = c.reduce((s, p) => s + p.x, 0) / 4
+        pos.y = c.reduce((s, p) => s + p.y, 0) / 4
+        path.style.opacity = '0.95'
       } else {
-        // free follow: lerp behind the pointer as a plain circle
         pos.x += (pointer.x - pos.x) * 0.16
         pos.y += (pointer.y - pos.y) * 0.16
-        ring.style.transition = 'border-color 0.2s, opacity 0.2s'
-        ring.style.left = `${pos.x - 16}px`
-        ring.style.top = `${pos.y - 16}px`
-        ring.style.width = '32px'
-        ring.style.height = '32px'
-        ring.style.borderRadius = '50%'
-        ring.style.opacity = pointer.x < 0 ? '0' : '0.55'
+        want = circlePts(pos.x, pos.y, 16)
+        path.style.opacity = pointer.x < 0 ? '0' : '0.55'
       }
       if (target && !target.isConnected) target = null
+
+      // point-by-point fluid morph toward the wanted shape
+      for (let i = 0; i < N; i++) {
+        ring[i].x += (want[i].x - ring[i].x) * 0.32
+        ring[i].y += (want[i].y - ring[i].y) * 0.32
+      }
+      path.setAttribute(
+        'd',
+        `M ${ring.map((p) => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' L ')} Z`,
+      )
       raf = requestAnimationFrame(tick)
     }
     tick()
 
     return () => {
       cancelAnimationFrame(raf)
+      window.removeEventListener('resize', onResize)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerdown', onDown)
       window.removeEventListener('pointerup', onUp)
@@ -117,11 +227,17 @@ export default function Cursor() {
 
   return (
     <div ref={layerRef} aria-hidden className="pointer-events-none fixed inset-0 z-[100] hidden md:block">
-      <div
-        ref={ringRef}
-        className="fixed left-0 top-0 border"
-        style={{ borderColor: accent, borderWidth: 1.5, opacity: 0, willChange: 'left, top, width, height' }}
-      />
+      <svg ref={svgRef} className="fixed inset-0" style={{ overflow: 'visible' }}>
+        <path
+          ref={pathRef}
+          fill="none"
+          stroke={accent}
+          strokeWidth={1.5}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          style={{ opacity: 0, transition: 'opacity 0.2s' }}
+        />
+      </svg>
       <div
         ref={dotRef}
         className="fixed left-0 top-0 h-1.5 w-1.5 rounded-full"
