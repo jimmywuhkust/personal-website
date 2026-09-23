@@ -207,6 +207,27 @@
     transform: translateY(-3px);
   }
 
+  /* Click ripple spawned by the custom cursor */
+  @keyframes cursor-ripple {
+    from {
+      transform: translate(-50%, -50%) scale(0.15);
+      opacity: 0.9;
+    }
+    to {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0;
+    }
+  }
+  .cursor-ripple {
+    position: fixed;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    border: 2px solid hsl(var(--brand) / 0.8);
+    box-shadow: 0 0 24px -4px hsl(var(--brand) / 0.5);
+    animation: cursor-ripple 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
   /* Light sweep across cards on hover */
   .card-sheen {
     position: relative;
@@ -265,6 +286,9 @@
 
 /* Respect users who prefer less motion */
 @media (prefers-reduced-motion: reduce) {
+  .cursor-ripple {
+    display: none !important;
+  }
   .reveal,
   .timeline-node,
   .timeline-line,
