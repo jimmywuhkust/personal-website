@@ -83,6 +83,7 @@ export const projects: Project[] = [
       },
     ],
     tags: ['UAV', 'AI Dispatch', 'LLM Agents', 'Emergency Response', 'Low-Altitude Economy', 'Winch Delivery'],
+    skills: ['esp32', 'arduino', 'cpp', 'python', 'easyeda', 'blender'],
     highlights: [
       {
         en: 'Gold Medal with Congratulations of the Jury — 51st International Exhibition of Inventions Geneva (2026)',
@@ -158,6 +159,7 @@ export const projects: Project[] = [
     collaborators: [],
     links: [],
     tags: ['VR', 'Haptics', 'Gyroscopic Precession', 'Prototyping', 'iF Design'],
+    skills: ['blender', 'cpp', 'arduino'],
     highlights: [
       {
         en: 'iF Design Award 2026',
@@ -205,6 +207,7 @@ export const projects: Project[] = [
       },
     ],
     tags: ['3D', 'Web', 'GIS', 'Open Data', 'Visualisation'],
+    skills: ['react', 'python', 'docker', 'proxmox'],
     highlights: [
       {
         en: 'Photorealistic scenes generated from official HK 3D map data',
@@ -254,6 +257,7 @@ export const projects: Project[] = [
       },
     ],
     tags: ['Mixed Reality', 'SIGGRAPH Asia', 'Performance Art', 'HCI'],
+    skills: ['blender', 'python'],
     highlights: [
       {
         en: 'SIGGRAPH Asia 2024 Art Papers',

@@ -46,6 +46,8 @@ export const uiStrings: Record<string, Record<Lang, string>> = {
   'home.toolbox': { en: 'Toolbox', zhHant: '技能工具箱', zhHans: '技能工具箱' },
   'toolbox.pro': { en: 'Confident / Semi-proficient', zhHant: '精通 · 半專業', zhHans: '精通 · 半专业' },
   'toolbox.learning': { en: 'Beginner / Intermediate', zhHant: '初階 · 進階中', zhHans: '初阶 · 进阶中' },
+  'toolbox.usedIn': { en: 'Used in', zhHant: '用於這些項目', zhHans: '用于这些项目' },
+  'toolbox.noProjects': { en: 'No linked projects yet', zhHant: '暫未關聯項目', zhHans: '暂未关联项目' },
   'home.interests': { en: 'Research Interests', zhHant: '研究興趣', zhHans: '研究兴趣' },
   'home.allProjects': { en: 'All projects', zhHant: '全部項目', zhHans: '全部项目' },
   'home.allMedia': { en: 'Full timeline', zhHant: '完整時間線', zhHans: '完整时间线' },

@@ -1,8 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { ExternalLink } from 'lucide-react'
 import type { MediaItem } from '../content/types'
 import { useLang } from '../i18n'
-import { useReveal } from '../hooks/useReveal'
 import BrandLogo from './BrandLogo'
 import { cn } from '@/lib/utils'
 
@@ -25,107 +24,30 @@ function fmtDateLong(iso: string, lang: string) {
   })
 }
 
-const PER_ROW = 4
-
 /**
  * Media coverage timeline.
- * - Desktop: a serpentine path (rows alternate direction, bending down at the
- *   edges) draws itself on scroll. Hovering a node updates ONE unified
- *   showcase panel above the timeline — no floating popups covering content.
- * - Mobile: vertical rail with round logo nodes and tap-friendly cards.
+ * - Desktop: sticky showcase panel on the left, a straight vertical timeline on
+ *   the right. Hovering/clicking any node swaps the showcase — it stays on
+ *   screen while you scroll, so the detail is always visible.
+ *   Major press (CNN, RTHK, TVB…) get big logo nodes; minor mentions are small
+ *   dots whose title appears on hover.
+ * - Mobile: vertical rail — full cards for major items, compact rows for minor.
  */
 export default function MediaTimeline({ items }: { items: MediaItem[] }) {
   const { lang, lt } = useLang()
-  const revealRef = useReveal()
   const sorted = [...items].sort((a, b) => b.date.localeCompare(a.date))
   const [activeId, setActiveId] = useState<string | null>(null)
   const active = sorted.find((m) => m.id === activeId) ?? sorted[0]
-  const [isDesktop, setIsDesktop] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches,
-  )
-
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-    const update = () => setIsDesktop(mq.matches)
-    mq.addEventListener('change', update)
-    return () => mq.removeEventListener('change', update)
-  }, [])
-
-  /* ---- serpentine path measurement ---- */
-  const containerRef = useRef<HTMLDivElement>(null)
-  const nodeRefs = useRef<Record<string, HTMLButtonElement | null>>({})
-  const [path, setPath] = useState('')
-  const [pathLen, setPathLen] = useState(0)
-  const [drawn, setDrawn] = useState(false)
-  const [viewBox, setViewBox] = useState('0 0 100 100')
-  const pathRef = useRef<SVGPathElement>(null)
-
-  useEffect(() => {
-    if (!isDesktop) return
-    const el = containerRef.current
-    if (!el) return
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.isIntersecting && setDrawn(true)),
-      { threshold: 0.1 },
-    )
-    io.observe(el)
-    return () => io.disconnect()
-  }, [isDesktop])
-
-  useLayoutEffect(() => {
-    if (!isDesktop) return
-    const measure = () => {
-      const box = containerRef.current
-      if (!box) return
-      const cRect = box.getBoundingClientRect()
-      const pts: { x: number; y: number }[] = []
-      for (const m of sorted) {
-        const el = nodeRefs.current[m.id]
-        if (!el) return
-        const r = el.getBoundingClientRect()
-        pts.push({ x: r.left - cRect.left + r.width / 2, y: r.top - cRect.top + r.height / 2 })
-      }
-      if (pts.length < 2) return
-
-      let d = `M ${pts[0].x} ${pts[0].y}`
-      for (let i = 1; i < pts.length; i++) {
-        const prev = pts[i - 1]
-        const cur = pts[i]
-        const sameRow = Math.abs(prev.y - cur.y) < 2
-        if (sameRow) {
-          d += ` L ${cur.x} ${cur.y}`
-        } else {
-          const dir = prev.x > cRect.width / 2 ? 1 : -1
-          const bulge = 44 * dir
-          d += ` C ${prev.x + bulge} ${prev.y}, ${cur.x + bulge} ${cur.y}, ${cur.x} ${cur.y}`
-        }
-      }
-      setPath(d)
-      setViewBox(`0 0 ${cRect.width} ${cRect.height}`)
-      requestAnimationFrame(() => {
-        const len = pathRef.current?.getTotalLength()
-        if (len) setPathLen(len)
-      })
-    }
-    const raf = requestAnimationFrame(measure)
-    const ro = new ResizeObserver(measure)
-    if (containerRef.current) ro.observe(containerRef.current)
-    return () => {
-      cancelAnimationFrame(raf)
-      ro.disconnect()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDesktop, items.length])
 
   if (sorted.length === 0) return null
 
-  /* ---------------- Mobile: vertical rail with round logo nodes ---------------- */
-  if (!isDesktop) {
-    return (
-      <div className="relative pl-9">
-        <div className="absolute bottom-2 left-[15px] top-2 w-px bg-gradient-to-b from-[hsl(var(--brand))] to-[hsl(var(--brand-2))] opacity-60" />
-        <div className="space-y-5">
-          {sorted.map((m) => (
+  /* ---------------- Mobile / narrow: rail of cards ---------------- */
+  const mobileRail = (
+    <div className="relative pl-9 lg:hidden">
+      <div className="absolute bottom-2 left-[15px] top-2 w-px bg-gradient-to-b from-[hsl(var(--brand))] to-[hsl(var(--brand-2))] opacity-60" />
+      <div className="space-y-5">
+        {sorted.map((m) =>
+          m.major ? (
             <a
               key={m.id}
               href={m.url}
@@ -150,138 +72,164 @@ export default function MediaTimeline({ items }: { items: MediaItem[] }) {
               <h3 className="mt-1 font-display font-semibold leading-snug">{lt(m.title)}</h3>
               <p className="mt-1.5 text-sm text-muted-foreground">{lt(m.summary)}</p>
             </a>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  /* ---------------- Desktop: unified showcase + serpentine ---------------- */
-  const rows: MediaItem[][] = []
-  for (let i = 0; i < sorted.length; i += PER_ROW) {
-    const chunk = sorted.slice(i, i + PER_ROW)
-    rows.push(rows.length % 2 === 1 ? [...chunk].reverse() : chunk)
-  }
-
-  return (
-    <div ref={revealRef}>
-      {/* Unified showcase panel — hovering a node swaps this content in place */}
-      <div key={active.id} className="glass-card showcase-enter mb-16 overflow-hidden">
-        <div className="grid md:grid-cols-[380px_1fr]">
-          {active.image ? (
-            <img
-              src={active.image}
-              alt={lt(active.title)}
-              className="anim-zoom h-full min-h-52 w-full object-cover"
-            />
           ) : (
-            <div className="anim-zoom flex min-h-52 items-center justify-center bg-gradient-to-br from-[hsl(var(--brand)/0.15)] to-[hsl(var(--brand-2)/0.15)]">
-              <BrandLogo src={active.logo} name={active.outlet} size={72} />
-            </div>
-          )}
-          <div className="p-6 md:p-8">
-            <div className="anim-rise flex items-center gap-3" style={{ animationDelay: '60ms' }}>
-              <BrandLogo src={active.logo} name={active.outlet} size={36} />
-              <div>
-                <p className="text-sm font-semibold">{active.outlet}</p>
-                <p className="text-xs text-muted-foreground">{fmtDateLong(active.date, lang)}</p>
-              </div>
-            </div>
-            <h3 className="anim-rise mt-4 font-display text-xl font-bold leading-snug md:text-2xl" style={{ animationDelay: '140ms' }}>
-              {lt(active.title)}
-            </h3>
-            <p className="anim-rise mt-3 leading-relaxed text-muted-foreground" style={{ animationDelay: '220ms' }}>
-              {lt(active.summary)}
-            </p>
             <a
-              href={active.url}
+              key={m.id}
+              href={m.url}
               target="_blank"
               rel="noreferrer"
-              className="anim-rise mt-5 inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background transition-transform hover:scale-105"
-              style={{ animationDelay: '300ms' }}
+              className="relative flex items-baseline gap-3 py-1 active:opacity-70"
             >
-              Read the story <ExternalLink size={14} />
+              <span className="absolute -left-9 top-2.5 flex h-8 w-8 items-center justify-center">
+                <span className="h-2 w-2 rounded-full bg-muted-foreground/60" />
+              </span>
+              <span className="shrink-0 text-xs text-muted-foreground">{fmtDate(m.date, lang)}</span>
+              <span className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground/80">{m.outlet}</span> · {lt(m.title)}
+              </span>
             </a>
+          ),
+        )}
+      </div>
+    </div>
+  )
+
+  /* ---------------- Desktop: sticky showcase + vertical timeline ---------------- */
+  let lastYear = ''
+
+  return (
+    <div>
+      {mobileRail}
+
+      <div className="hidden gap-10 lg:grid lg:grid-cols-[420px_1fr]">
+        {/* Sticky showcase — always visible while scrolling the timeline */}
+        <div className="self-start lg:sticky lg:top-24">
+          <div key={active.id} className="glass-card showcase-enter overflow-hidden">
+            {active.image ? (
+              <img
+                src={active.image}
+                alt={lt(active.title)}
+                className="anim-zoom aspect-video w-full object-cover"
+              />
+            ) : (
+              <div className="anim-zoom flex aspect-video items-center justify-center bg-gradient-to-br from-[hsl(var(--brand)/0.15)] to-[hsl(var(--brand-2)/0.15)]">
+                <BrandLogo src={active.logo} name={active.outlet} size={72} />
+              </div>
+            )}
+            <div className="p-6">
+              <div className="anim-rise flex items-center gap-3" style={{ animationDelay: '60ms' }}>
+                <BrandLogo src={active.logo} name={active.outlet} size={36} />
+                <div>
+                  <p className="text-sm font-semibold">{active.outlet}</p>
+                  <p className="text-xs text-muted-foreground">{fmtDateLong(active.date, lang)}</p>
+                </div>
+              </div>
+              <h3
+                className="anim-rise mt-3 font-display text-lg font-bold leading-snug"
+                style={{ animationDelay: '140ms' }}
+              >
+                {lt(active.title)}
+              </h3>
+              <p
+                className="anim-rise mt-2 text-sm leading-relaxed text-muted-foreground"
+                style={{ animationDelay: '220ms' }}
+              >
+                {lt(active.summary)}
+              </p>
+              <a
+                href={active.url}
+                target="_blank"
+                rel="noreferrer"
+                className="anim-rise mt-4 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-transform hover:scale-105"
+                style={{ animationDelay: '300ms' }}
+              >
+                Read the story <ExternalLink size={14} />
+              </a>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Serpentine timeline */}
-      <div ref={containerRef} className="relative py-6">
-        {path && (
-          <svg
-            className="pointer-events-none absolute inset-0 h-full w-full"
-            viewBox={viewBox}
-            preserveAspectRatio="none"
-            aria-hidden
-          >
-            <defs>
-              <linearGradient id="tl-grad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="hsl(var(--brand))" />
-                <stop offset="50%" stopColor="hsl(var(--brand-2))" />
-                <stop offset="100%" stopColor="hsl(var(--brand))" />
-              </linearGradient>
-            </defs>
-            <path
-              ref={pathRef}
-              d={path}
-              fill="none"
-              stroke="url(#tl-grad)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              style={
-                pathLen
-                  ? {
-                      strokeDasharray: pathLen,
-                      strokeDashoffset: drawn ? 0 : pathLen,
-                      transition: 'stroke-dashoffset 2.2s cubic-bezier(0.22,1,0.36,1) 0.25s',
-                    }
-                  : undefined
-              }
-            />
-          </svg>
-        )}
-
-        <div className="relative space-y-20">
-          {rows.map((row, ri) => (
-            <div key={ri} className="grid grid-cols-4">
-              {row.map((m) => {
-                const isActive = active.id === m.id
-                const globalIndex = sorted.indexOf(m)
-                return (
-                  <div
-                    key={m.id}
-                    className="timeline-node relative flex flex-col items-center"
-                    style={{ transitionDelay: `${globalIndex * 110}ms` }}
+        {/* Straight vertical timeline: big nodes for major press, dots for the rest */}
+        <div className="relative pl-14">
+          <div className="absolute bottom-3 left-[27px] top-3 w-0.5 rounded bg-gradient-to-b from-[hsl(var(--brand))] via-[hsl(var(--brand-2)/0.7)] to-[hsl(var(--brand)/0.3)]" />
+          <div className="space-y-2">
+            {sorted.map((m) => {
+              const year = m.date.slice(0, 4)
+              const yearHeader = year !== lastYear ? year : null
+              lastYear = year
+              const isActive = active.id === m.id
+              return (
+                <div key={m.id}>
+                  {yearHeader && (
+                    <div className="relative flex items-center pb-1 pt-6 first:pt-0">
+                      <span className="absolute -left-14 flex h-14 w-14 items-center justify-center">
+                        <span className="h-2.5 w-2.5 rounded-full bg-[hsl(var(--brand-2))]" />
+                      </span>
+                      <span className="font-display text-xl font-bold text-muted-foreground">{yearHeader}</span>
+                    </div>
+                  )}
+                  <button
+                    type="button"
                     onMouseEnter={() => setActiveId(m.id)}
+                    onFocus={() => setActiveId(m.id)}
+                    onClick={() => setActiveId(m.id)}
+                    className={cn(
+                      'group relative flex w-full items-center gap-4 rounded-xl px-3 py-2.5 text-left transition-colors',
+                      isActive ? 'bg-secondary/60' : 'hover:bg-secondary/30',
+                    )}
+                    aria-label={lt(m.title)}
                   >
-                    <button
-                      ref={(el) => {
-                        nodeRefs.current[m.id] = el
-                      }}
-                      className={cn(
-                        'relative z-10 flex items-center justify-center rounded-full border bg-background transition-all duration-300',
-                        isActive
-                          ? 'scale-125 border-[hsl(var(--brand))] shadow-[0_0_30px_-6px_hsl(var(--brand)/0.8)]'
-                          : 'border-border hover:border-[hsl(var(--brand))]',
-                      )}
-                      aria-label={lt(m.title)}
-                    >
-                      <BrandLogo src={m.logo} name={m.outlet} size={48} className="rounded-full" />
-                    </button>
-                    <p
-                      className={cn(
-                        'mt-4 whitespace-nowrap text-xs transition-colors',
-                        isActive ? 'font-semibold text-foreground' : 'text-muted-foreground',
-                      )}
-                    >
-                      {fmtDate(m.date, lang)}
-                    </p>
-                  </div>
-                )
-              })}
-            </div>
-          ))}
+                    {m.major ? (
+                      <span
+                        className={cn(
+                          'absolute -left-14 flex h-14 w-14 items-center justify-center rounded-full border bg-background transition-all duration-300',
+                          isActive
+                            ? 'scale-110 border-[hsl(var(--brand))] shadow-[0_0_24px_-6px_hsl(var(--brand)/0.8)]'
+                            : 'border-border group-hover:border-[hsl(var(--brand)/0.6)]',
+                        )}
+                      >
+                        <BrandLogo src={m.logo} name={m.outlet} size={40} className="rounded-full" />
+                      </span>
+                    ) : (
+                      <span className="absolute -left-14 flex h-14 w-14 items-center justify-center">
+                        <span
+                          className={cn(
+                            'rounded-full border-2 border-background transition-all duration-300',
+                            isActive
+                              ? 'h-3.5 w-3.5 bg-[hsl(var(--brand))]'
+                              : 'h-2.5 w-2.5 bg-muted-foreground/50 group-hover:bg-[hsl(var(--brand)/0.7)]',
+                          )}
+                        />
+                      </span>
+                    )}
+                    <span className="w-16 shrink-0 text-xs text-muted-foreground">{fmtDate(m.date, lang)}</span>
+                    <span className="min-w-0">
+                      <span
+                        className={cn(
+                          'block truncate font-medium',
+                          m.major ? 'text-sm text-foreground' : 'text-xs text-muted-foreground',
+                          isActive && 'text-[hsl(var(--brand))]',
+                        )}
+                      >
+                        {m.outlet}
+                      </span>
+                      <span
+                        className={cn(
+                          'block truncate text-sm text-muted-foreground transition-all duration-300',
+                          m.major
+                            ? 'opacity-100'
+                            : 'max-h-0 opacity-0 group-hover:max-h-6 group-hover:opacity-100',
+                          isActive && 'max-h-6 opacity-100',
+                        )}
+                      >
+                        {lt(m.title)}
+                      </span>
+                    </span>
+                  </button>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
     </div>

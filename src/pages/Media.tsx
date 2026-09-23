@@ -1,6 +1,7 @@
 import { useLang } from '../i18n'
 import { getContent } from '../content'
 import MediaTimeline from '../components/MediaTimeline'
+import PressStrip from '../components/PressStrip'
 import Reveal from '../components/effects/Reveal'
 
 export default function Media() {
@@ -18,6 +19,12 @@ export default function Media() {
       </Reveal>
       <div className="mt-8">
         <MediaTimeline items={media} />
+      </div>
+      <div className="mt-20 border-t border-border/50 pt-10">
+        <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+          {t('home.pressStrip')}
+        </p>
+        <PressStrip items={media} />
       </div>
     </div>
   )

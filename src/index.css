@@ -196,15 +196,13 @@
     animation-play-state: paused;
   }
   .marquee-logo {
-    filter: grayscale(1);
-    opacity: 0.55;
+    opacity: 0.85;
+    display: inline-block;
     transition:
-      filter 0.3s,
       opacity 0.3s,
       transform 0.3s;
   }
   .marquee-logo:hover {
-    filter: none;
     opacity: 1;
     transform: translateY(-3px);
   }

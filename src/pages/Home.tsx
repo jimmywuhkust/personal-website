@@ -1,30 +1,16 @@
+import { useState } from 'react'
 import { Link } from 'react-router'
-import { ArrowRight, ArrowDown, MapPin, Download } from 'lucide-react'
+import { ArrowRight, ArrowDown, ArrowUpRight, ChevronDown, MapPin, Download } from 'lucide-react'
 import { useLang } from '../i18n'
 import { getContent } from '../content'
 import ParticleField from '../components/effects/ParticleField'
 import Reveal from '../components/effects/Reveal'
-import Scramble from '../components/effects/Scramble'
 import Magnetic from '../components/effects/Magnetic'
 import TiltCard from '../components/effects/TiltCard'
 import ProjectCard from '../components/ProjectCard'
 import MediaTimeline from '../components/MediaTimeline'
-
-/** Outlets that have covered the work — shown as a scrolling press strip. */
-const PRESS_LOGOS = [
-  { src: '/logos/cnn.svg', alt: 'CNN' },
-  { src: '/logos/tvb-peacock.svg', alt: 'TVB' },
-  { src: '/logos/tvbs.png', alt: 'TVBS' },
-  { src: '/logos/am730.png', alt: 'am730' },
-  { src: '/logos/wenweipo.png', alt: 'Wen Wei Po' },
-  { src: '/logos/takungpao.png', alt: 'Ta Kung Pao' },
-  { src: '/logos/sciencenet.jpg', alt: 'ScienceNet' },
-  { src: '/logos/geneva.png', alt: 'Geneva Inventions' },
-  { src: '/logos/asmpt.png', alt: 'ASMPT' },
-  { src: '/logos/chinachem.png', alt: 'Chinachem' },
-  { src: '/logos/hkaf.png', alt: 'HK Arts Festival' },
-  { src: '/logos/hkust.svg', alt: 'HKUST' },
-]
+import PressStrip from '../components/PressStrip'
+import { cn } from '@/lib/utils'
 
 export default function Home() {
   const { t, lt, lang } = useLang()
@@ -32,6 +18,10 @@ export default function Home() {
   const { profile } = content
   const featured = content.projects.filter((p) => p.featured)
   const latestMedia = content.media.slice(0, 5)
+
+  // Toolbox: selected skill expands to show the projects that use it
+  const [activeSkill, setActiveSkill] = useState<string | null>(null)
+  const projectsUsing = (skillId: string) => content.projects.filter((p) => p.skills?.includes(skillId))
 
   return (
     <div>
@@ -79,7 +69,7 @@ export default function Home() {
           </Reveal>
           <Reveal delay={300}>
             <p className="mt-3 max-w-2xl font-display text-2xl font-medium leading-snug sm:text-3xl">
-              <Scramble text={lt(profile.tagline)} />
+              {lt(profile.tagline)}
             </p>
           </Reveal>
           <Reveal delay={400}>
@@ -120,26 +110,6 @@ export default function Home() {
           <div className="flex flex-col items-center gap-2 text-xs uppercase tracking-widest">
             {t('hero.scroll')}
             <ArrowDown size={14} className="animate-bounce" />
-          </div>
-        </div>
-      </section>
-
-      {/* ---------- PRESS STRIP ---------- */}
-      <section className="border-y border-border/50 py-8">
-        <p className="mb-5 text-center text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-          {t('home.pressStrip')}
-        </p>
-        <div className="marquee-mask overflow-hidden">
-          <div className="marquee-track flex w-max items-center gap-14 px-7">
-            {[...PRESS_LOGOS, ...PRESS_LOGOS].map((l, i) => (
-              <img
-                key={i}
-                src={l.src}
-                alt={l.alt}
-                loading="lazy"
-                className="marquee-logo h-7 w-auto object-contain sm:h-8"
-              />
-            ))}
           </div>
         </div>
       </section>
@@ -205,7 +175,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ---------- TOOLBOX ---------- */}
+      {/* ---------- TOOLBOX (click a skill → projects that use it) ---------- */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <Reveal className="mb-8">
           <h2 className="font-display text-3xl font-bold sm:text-4xl">
@@ -213,35 +183,84 @@ export default function Home() {
             <span className="text-gradient">.</span>
           </h2>
         </Reveal>
-        {(['pro', 'learning'] as const).map((level) => (
-          <div key={level} className="mb-8 last:mb-0">
-            <Reveal>
-              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-                {t(`toolbox.${level}`)}
-              </p>
-            </Reveal>
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
-              {content.skills
-                .filter((s) => s.level === level)
-                .map((s, i) => (
-                  <Reveal key={s.id} delay={i * 50}>
-                    <TiltCard className="flex flex-col items-center gap-2.5 p-4 text-center" max={10}>
-                      {s.icon ? (
-                        <span className="flex h-10 w-10 items-center justify-center">
-                          <img src={s.icon} alt={`${s.name} logo`} loading="lazy" className="max-h-full max-w-full object-contain" />
-                        </span>
-                      ) : (
-                        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--brand))] to-[hsl(var(--brand-2))] font-display text-lg font-bold text-white">
-                          {s.name.charAt(0)}
-                        </span>
-                      )}
-                      <span className="text-xs font-medium leading-tight">{s.name}</span>
-                    </TiltCard>
-                  </Reveal>
-                ))}
+        {(['pro', 'learning'] as const).map((level) => {
+          const levelSkills = content.skills.filter((s) => s.level === level)
+          const selected = levelSkills.find((s) => s.id === activeSkill)
+          return (
+            <div key={level} className="mb-8 last:mb-0">
+              <Reveal>
+                <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+                  {t(`toolbox.${level}`)}
+                </p>
+              </Reveal>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+                {levelSkills.map((s, i) => {
+                  const isActive = activeSkill === s.id
+                  const linked = projectsUsing(s.id)
+                  return (
+                    <Reveal key={s.id} delay={i * 50}>
+                      <button
+                        type="button"
+                        onClick={() => setActiveSkill(isActive ? null : s.id)}
+                        className="block w-full text-left"
+                        aria-expanded={isActive}
+                      >
+                        <TiltCard
+                          className={cn(
+                            'flex flex-col items-center gap-2.5 p-4 text-center transition-colors',
+                            isActive && 'border-[hsl(var(--brand))]',
+                          )}
+                          max={10}
+                        >
+                          {s.icon ? (
+                            <span className="flex h-10 w-10 items-center justify-center">
+                              <img src={s.icon} alt={`${s.name} logo`} loading="lazy" className="max-h-full max-w-full object-contain" />
+                            </span>
+                          ) : (
+                            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--brand))] to-[hsl(var(--brand-2))] font-display text-lg font-bold text-white">
+                              {s.name.charAt(0)}
+                            </span>
+                          )}
+                          <span className="text-xs font-medium leading-tight">{s.name}</span>
+                          <ChevronDown
+                            size={12}
+                            className={cn(
+                              'text-muted-foreground transition-transform duration-300',
+                              isActive && 'rotate-180 text-[hsl(var(--brand))]',
+                              linked.length === 0 && 'opacity-30',
+                            )}
+                          />
+                        </TiltCard>
+                      </button>
+                    </Reveal>
+                  )
+                })}
+              </div>
+              {/* expansion strip for the selected skill in this level */}
+              {selected && (
+                <div className="glass-card mt-4 flex flex-wrap items-center gap-3 p-4">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {selected.name} · {t('toolbox.usedIn')}
+                  </span>
+                  {projectsUsing(selected.id).length === 0 ? (
+                    <span className="text-sm text-muted-foreground">{t('toolbox.noProjects')}</span>
+                  ) : (
+                    projectsUsing(selected.id).map((p) => (
+                      <Link
+                        key={p.id}
+                        to={`/projects/${p.id}`}
+                        className="group flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm transition-colors hover:border-[hsl(var(--brand))] hover:text-[hsl(var(--brand))]"
+                      >
+                        {lt(p.title)}
+                        <ArrowUpRight size={13} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                      </Link>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          )
+        })}
       </section>
 
       {/* ---------- FEATURED PROJECTS ---------- */}
@@ -278,6 +297,9 @@ export default function Home() {
               <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
             </Link>
           </Reveal>
+          <div className="mb-10">
+            <PressStrip items={content.media} />
+          </div>
           <MediaTimeline items={latestMedia} />
         </section>
       )}

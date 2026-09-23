@@ -51,6 +51,7 @@ export interface Project {
   collaborators: Collaborator[]
   links: ProjectLink[]
   tags: string[]
+  skills?: string[] // skill ids from skills.ts — used to cross-link projects ⇄ toolbox
   highlights: LText[] // bullet points on detail page
   featured: boolean // shown on home page
   image?: string // card/hero image, path under public/ e.g. /images/aerorelief-1.jpg
@@ -104,6 +105,7 @@ export interface MediaItem {
   kind: 'video' | 'article' | 'interview' | 'post'
   image?: string // thumbnail, path under public/
   logo?: string // outlet logo in public/logos/
+  major?: boolean // true → press coverage shown as a big node on the timeline; minor items are small dots
 }
 
 export interface Experience {
