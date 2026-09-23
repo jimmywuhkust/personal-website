@@ -4,9 +4,27 @@ import { useLang } from '../i18n'
 import { getContent } from '../content'
 import ParticleField from '../components/effects/ParticleField'
 import Reveal from '../components/effects/Reveal'
+import Scramble from '../components/effects/Scramble'
+import Magnetic from '../components/effects/Magnetic'
 import TiltCard from '../components/effects/TiltCard'
 import ProjectCard from '../components/ProjectCard'
 import MediaTimeline from '../components/MediaTimeline'
+
+/** Outlets that have covered the work — shown as a scrolling press strip. */
+const PRESS_LOGOS = [
+  { src: '/logos/cnn.svg', alt: 'CNN' },
+  { src: '/logos/tvb-peacock.svg', alt: 'TVB' },
+  { src: '/logos/tvbs.png', alt: 'TVBS' },
+  { src: '/logos/am730.png', alt: 'am730' },
+  { src: '/logos/wenweipo.png', alt: 'Wen Wei Po' },
+  { src: '/logos/takungpao.png', alt: 'Ta Kung Pao' },
+  { src: '/logos/sciencenet.jpg', alt: 'ScienceNet' },
+  { src: '/logos/geneva.png', alt: 'Geneva Inventions' },
+  { src: '/logos/asmpt.png', alt: 'ASMPT' },
+  { src: '/logos/chinachem.png', alt: 'Chinachem' },
+  { src: '/logos/hkaf.png', alt: 'HK Arts Festival' },
+  { src: '/logos/hkust.svg', alt: 'HKUST' },
+]
 
 export default function Home() {
   const { t, lt, lang } = useLang()
@@ -61,32 +79,38 @@ export default function Home() {
           </Reveal>
           <Reveal delay={300}>
             <p className="mt-3 max-w-2xl font-display text-2xl font-medium leading-snug sm:text-3xl">
-              {lt(profile.tagline)}
+              <Scramble text={lt(profile.tagline)} />
             </p>
           </Reveal>
           <Reveal delay={400}>
             <div className="mt-10 flex flex-wrap items-center gap-4">
-              <Link
-                to="/projects"
-                className="group flex items-center gap-2 rounded-full bg-foreground px-6 py-3 font-medium text-background transition-transform hover:scale-105"
-              >
-                {t('hero.viewProjects')}
-                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-              </Link>
-              <a
-                href="/cv.pdf"
-                download
-                className="flex items-center gap-2 rounded-full border border-border px-6 py-3 font-medium transition-colors hover:border-[hsl(var(--brand))] hover:text-[hsl(var(--brand))]"
-              >
-                <Download size={16} /> {t('hero.downloadCV')}
-              </a>
-              {profile.email && (
+              <Magnetic>
+                <Link
+                  to="/projects"
+                  className="group flex items-center gap-2 rounded-full bg-foreground px-6 py-3 font-medium text-background transition-transform hover:scale-105"
+                >
+                  {t('hero.viewProjects')}
+                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Magnetic>
+              <Magnetic>
                 <a
-                  href={`mailto:${profile.email}`}
+                  href="/cv.pdf"
+                  download
                   className="flex items-center gap-2 rounded-full border border-border px-6 py-3 font-medium transition-colors hover:border-[hsl(var(--brand))] hover:text-[hsl(var(--brand))]"
                 >
-                  {profile.email}
+                  <Download size={16} /> {t('hero.downloadCV')}
                 </a>
+              </Magnetic>
+              {profile.email && (
+                <Magnetic>
+                  <a
+                    href={`mailto:${profile.email}`}
+                    className="flex items-center gap-2 rounded-full border border-border px-6 py-3 font-medium transition-colors hover:border-[hsl(var(--brand))] hover:text-[hsl(var(--brand))]"
+                  >
+                    {profile.email}
+                  </a>
+                </Magnetic>
               )}
             </div>
           </Reveal>
@@ -96,6 +120,26 @@ export default function Home() {
           <div className="flex flex-col items-center gap-2 text-xs uppercase tracking-widest">
             {t('hero.scroll')}
             <ArrowDown size={14} className="animate-bounce" />
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- PRESS STRIP ---------- */}
+      <section className="border-y border-border/50 py-8">
+        <p className="mb-5 text-center text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+          {t('home.pressStrip')}
+        </p>
+        <div className="marquee-mask overflow-hidden">
+          <div className="marquee-track flex w-max items-center gap-14 px-7">
+            {[...PRESS_LOGOS, ...PRESS_LOGOS].map((l, i) => (
+              <img
+                key={i}
+                src={l.src}
+                alt={l.alt}
+                loading="lazy"
+                className="marquee-logo h-7 w-auto object-contain sm:h-8"
+              />
+            ))}
           </div>
         </div>
       </section>

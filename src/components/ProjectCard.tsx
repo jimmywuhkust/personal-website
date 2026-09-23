@@ -17,7 +17,7 @@ export default function ProjectCard({ project, index = 0 }: { project: Project; 
 
   return (
     <Link to={`/projects/${project.id}`} className="group block">
-      <TiltCard className={cn('flex h-full flex-col overflow-hidden')}>
+      <TiltCard className={cn('card-sheen flex h-full flex-col overflow-hidden')}>
         {/* visual header band */}
         <div
           className={cn(

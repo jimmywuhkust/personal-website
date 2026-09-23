@@ -38,6 +38,7 @@ export const uiStrings: Record<string, Record<Lang, string>> = {
   'hero.scroll': { en: 'Scroll to explore', zhHant: '向下探索', zhHans: '向下探索' },
   'hero.viewProjects': { en: 'View projects', zhHant: '查看項目', zhHans: '查看项目' },
   'hero.downloadCV': { en: 'Download CV', zhHant: '下載 CV', zhHans: '下载 CV' },
+  'home.pressStrip': { en: 'In the press', zhHant: '媒體報道', zhHans: '媒体报道' },
   'home.featuredProjects': { en: 'Featured Projects', zhHant: '精選項目', zhHans: '精选项目' },
   'home.latestMedia': { en: 'In the Media', zhHant: '媒體報道', zhHans: '媒体报道' },
   'home.about': { en: 'About', zhHant: '關於我', zhHans: '关于我' },

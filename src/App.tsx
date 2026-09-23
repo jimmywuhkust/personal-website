@@ -4,6 +4,7 @@ import { LanguageProvider } from './i18n'
 import { ThemeProvider } from './hooks/theme'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
+import Cursor from './components/effects/Cursor'
 import Home from './pages/Home'
 import Projects from './pages/Projects'
 import ProjectDetail from './pages/ProjectDetail'
@@ -34,6 +35,7 @@ export default function App() {
     <ThemeProvider>
       <LanguageProvider>
         <div key={contentVersion} className="flex min-h-screen flex-col">
+          <Cursor />
           <Navbar />
           <main className="flex-1">
             <Routes>

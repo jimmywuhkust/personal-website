@@ -117,7 +117,17 @@ export const projects: Project[] = [
     ],
     featured: true,
     image: '/images/aerorelief-1.jpg',
-    images: ['/images/aerorelief-1.jpg', '/images/aerorelief-2.jpg', '/images/aerorelief-3.jpg', '/images/cnn-tech-for-good.jpg'],
+    images: [
+      '/images/aerorelief-1.jpg',
+      '/images/aerorelief-2.jpg',
+      '/images/aerorelief-3.jpg',
+      '/images/cnn-tech-for-good.jpg',
+      '/images/media-cnn-1.jpg',
+      '/images/media-asmpt-2.jpg',
+      '/images/media-asmpt-3.jpg',
+      '/images/media-mpep-2.jpg',
+      '/images/media-sandbox-1.jpg',
+    ],
     // 3D / deck slots: set modelUrl (GLB) / deckUrl (PDF) when your files are ready
   },
   {

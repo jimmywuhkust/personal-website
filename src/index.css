@@ -187,6 +187,55 @@
   .marquee-track {
     animation: marquee 28s linear infinite;
   }
+  /* Edge-faded, pause-on-hover logo strip */
+  .marquee-mask {
+    mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+  }
+  .marquee-mask:hover .marquee-track {
+    animation-play-state: paused;
+  }
+  .marquee-logo {
+    filter: grayscale(1);
+    opacity: 0.55;
+    transition:
+      filter 0.3s,
+      opacity 0.3s,
+      transform 0.3s;
+  }
+  .marquee-logo:hover {
+    filter: none;
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+
+  /* Light sweep across cards on hover */
+  .card-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .card-sheen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      hsl(var(--brand) / 0.14) 48%,
+      hsl(0 0% 100% / 0.22) 50%,
+      hsl(var(--brand-2) / 0.14) 52%,
+      transparent 60%
+    );
+    transform: translateX(-120%);
+    transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .card-sheen:hover::before {
+      transform: translateX(120%);
+    }
+  }
 
   /* Slow float for decorative blobs */
   @keyframes floaty {
@@ -223,7 +272,8 @@
   .timeline-line,
   .marquee-track,
   .floaty,
-  .pulse-glow {
+  .pulse-glow,
+  .card-sheen::before {
     animation: none !important;
     transition: none !important;
     transform: none !important;
