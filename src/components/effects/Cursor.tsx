@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useTheme } from '../../hooks/theme'
 
 const INTERACTIVE = 'a, button, [role="button"], input, textarea, select, summary, [data-cursor]'
-const N = 48 // perimeter sample points of the ring
+const N = 64 // perimeter sample points of the ring
 
 type Pt = { x: number; y: number }
 
@@ -15,51 +15,46 @@ function circlePts(cx: number, cy: number, r: number): Pt[] {
   return pts
 }
 
-/** Closed polyline along a rounded rect (local coords, clockwise from top-left). */
-function roundedRectPath(w: number, h: number, radii: number[]): Pt[] {
+/**
+ * Exactly n points along a rounded rect (local coords, clockwise from the top
+ * edge). Corner arcs get a FIXED share of points each — an even arc-length
+ * distribution would starve small radii and turn them into chamfers.
+ */
+function roundedRectSample(w: number, h: number, radii: number[], n: number): Pt[] {
   const [tl, tr, br, bl] = radii
+  const cornerN = Math.max(6, Math.floor(n / 8))
+  const edgeLens = [w - tl - tr, h - tr - br, w - br - bl, h - bl - tl].map((l) => Math.max(0, l))
+  const totalEdge = edgeLens.reduce((s, l) => s + l, 0)
+  const edgeBudget = n - 4 * cornerN
+  // largest-remainder apportioning so counts sum exactly to edgeBudget
+  const raw = edgeLens.map((l) => (totalEdge > 0 ? (edgeBudget * l) / totalEdge : edgeBudget / 4))
+  const counts = raw.map(Math.floor)
+  let rem = edgeBudget - counts.reduce((s, c) => s + c, 0)
+  const order = raw.map((r, i) => [r - counts[i], i] as const).sort((a, b) => b[0] - a[0])
+  for (let k = 0; rem > 0; k = (k + 1) % 4, rem--) counts[order[k][1]]++
+
   const pts: Pt[] = []
+  const edge = (x0: number, y0: number, x1: number, y1: number, c: number) => {
+    for (let i = 0; i < c; i++) {
+      const t = i / c
+      pts.push({ x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t })
+    }
+  }
   const arc = (cx: number, cy: number, r: number, a0: number, a1: number) => {
-    const steps = Math.max(2, Math.ceil(r / 3))
-    for (let i = 1; i <= steps; i++) {
-      const a = a0 + ((a1 - a0) * i) / steps
+    for (let i = 0; i < cornerN; i++) {
+      const a = a0 + ((a1 - a0) * i) / (cornerN - 1)
       pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r })
     }
   }
-  pts.push({ x: tl, y: 0 })
-  pts.push({ x: w - tr, y: 0 })
+  edge(tl, 0, w - tr, 0, counts[0])
   arc(w - tr, tr, tr, -Math.PI / 2, 0)
-  pts.push({ x: w, y: h - br })
+  edge(w, tr, w, h - br, counts[1])
   arc(w - br, h - br, br, 0, Math.PI / 2)
-  pts.push({ x: bl, y: h })
+  edge(w - br, h, bl, h, counts[2])
   arc(bl, h - bl, bl, Math.PI / 2, Math.PI)
-  pts.push({ x: 0, y: tl })
+  edge(0, h - bl, 0, tl, counts[3])
   arc(tl, tl, tl, Math.PI, Math.PI * 1.5)
   return pts
-}
-
-/** Resample a closed polyline to n evenly spaced points. */
-function resample(pts: Pt[], n: number): Pt[] {
-  const lens = pts.map((p, i) => {
-    const b = pts[(i + 1) % pts.length]
-    return Math.hypot(b.x - p.x, b.y - p.y)
-  })
-  const total = lens.reduce((s, l) => s + l, 0) || 1
-  const out: Pt[] = []
-  let seg = 0
-  let acc = 0
-  for (let i = 0; i < n; i++) {
-    const d = (i / n) * total
-    while (seg < pts.length - 1 && acc + lens[seg] < d) {
-      acc += lens[seg]
-      seg++
-    }
-    const a = pts[seg]
-    const b = pts[(seg + 1) % pts.length]
-    const t = lens[seg] ? (d - acc) / lens[seg] : 0
-    out.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t })
-  }
-  return out
 }
 
 function cornerRadii(el: HTMLElement, w: number, h: number): number[] {
@@ -87,14 +82,11 @@ function cornerRadii(el: HTMLElement, w: number, h: number): number[] {
 function shapePoints(el: HTMLElement): Pt[] {
   const w = el.offsetWidth
   const h = el.offsetHeight
-  const local = roundedRectPath(w, h, cornerRadii(el, w, h))
+  const local = roundedRectSample(w, h, cornerRadii(el, w, h), N)
   const t = getComputedStyle(el).transform
   if (!t || t === 'none') {
     const r = el.getBoundingClientRect()
-    return resample(
-      local.map((p) => ({ x: p.x + r.left, y: p.y + r.top })),
-      N,
-    )
+    return local.map((p) => ({ x: p.x + r.left, y: p.y + r.top }))
   }
   // untransformed border-box origin, in viewport coords
   // (assumes no transformed ancestors, which holds for this site)
@@ -120,7 +112,7 @@ function shapePoints(el: HTMLElement): Pt[] {
     const dw = q.w || 1
     return { x: x + ox + q.x / dw, y: y + oy + q.y / dw }
   }
-  return resample(local.map(project), N)
+  return local.map(project)
 }
 
 /**
