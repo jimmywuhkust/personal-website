@@ -23,6 +23,7 @@ export const media: MediaItem[] = [
     url: 'https://www.rthk.hk/tv/dtt31/programme/hkunited/episode/1089064',
     kind: 'video',
     major: true,
+    logo: '/logos/rthk.png',
     image: '/images/media-rthk-1.jpg',
   },
   {
@@ -41,7 +42,6 @@ export const media: MediaItem[] = [
     },
     url: 'https://news.sciencenet.cn/htmlnews/2026/4/562450.shtm',
     kind: 'article',
-    major: true,
     logo: '/logos/sciencenet.jpg',
     image: '/images/media-geneva-seng-3.jpg',
   },
@@ -100,7 +100,6 @@ export const media: MediaItem[] = [
     },
     url: 'https://www.wenweipo.com/a/202603/02/AP69a49ee3e4b04d7d56d5ed81.html',
     kind: 'article',
-    major: true,
     logo: '/logos/wenweipo.png',
     image: '/images/media-wands-1.jpg',
   },
@@ -201,25 +200,6 @@ export const media: MediaItem[] = [
     image: '/images/cnn-tech-for-good.jpg',
   },
   {
-    id: 'takungpao-2025',
-    date: '2025-10-10',
-    outlet: 'Ta Kung Pao 大公報',
-    title: {
-      en: 'Drone emergency system reaches remote locations fast to save lives',
-      zhHant: '無人機急救系統　迅速抵偏遠地點救人',
-      zhHans: '无人机急救系统　迅速抵偏远地点救人',
-    },
-    summary: {
-      en: 'Ta Kung Pao interviews Jimmy Wu at the International Low-Altitude Economy Summit: AeroRelief cuts response time to under 10 minutes for cardiac arrest, severe allergy and heatstroke cases.',
-      zhHant: '大公報於國際低空經濟高峰會訪問胡駿銘：AeroRelief 把心臟驟停、嚴重過敏、中暑等個案的反應時間縮至 10 分鐘內。',
-      zhHans: '大公报于国际低空经济高峰会访问胡骏铭：AeroRelief 把心脏骤停、严重过敏、中暑等个案的反应时间缩至 10 分钟内。',
-    },
-    url: 'https://www.takungpao.com/news/232109/2025/1010/1130089.html',
-    kind: 'interview',
-    major: true,
-    logo: '/logos/takungpao.png',
-  },
-  {
     id: 'asmpt-2025',
     date: '2025-07-15',
     outlet: 'HKUST SENG',
@@ -237,25 +217,6 @@ export const media: MediaItem[] = [
     kind: 'article',
     logo: '/logos/asmpt.png',
     image: '/images/media-asmpt-1.jpg',
-  },
-  {
-    id: 'ohkf-2025',
-    date: '2025-05-13',
-    outlet: 'Our Hong Kong Foundation 團結香港基金',
-    title: {
-      en: '“Smooth Flow of Goods” EP13: drone delivery — the low-altitude economy takes off',
-      zhHant: '《物暢其流》第十三集：無人機送快遞　「低空經濟」正起飛',
-      zhHans: '《物畅其流》第十三集：无人机送快递　「低空经济」正起飞',
-    },
-    summary: {
-      en: 'The OHKF × TVB infotainment series features Hong Kong’s low-altitude economy; Jimmy Wu demonstrates the AeroRelief “UAV Rescue Platform” at the LAERC booth in the episode.',
-      zhHant: '團結香港基金與 TVB 聯合製作的資訊節目聚焦低空經濟，胡駿銘於低空經濟研究中心展位示範 AeroRelief「UAV Rescue Platform」救援無人機。',
-      zhHans: '团结香港基金与 TVB 联合制作的资讯节目聚焦低空经济，胡骏铭于低空经济研究中心展位示范 AeroRelief「UAV Rescue Platform」救援无人机。',
-    },
-    url: 'https://www.ourhkfoundation.org.hk/media/video-series/%E7%89%A9%E6%9A%A2%E5%85%B6%E6%B5%81/EP13-%E7%84%A1%E4%BA%BA%E6%A9%9F%E9%80%81%E5%BF%AB%E9%81%9E-%E4%BD%8E%E7%A9%BA%E7%B6%93%E6%BF%9F%E6%AD%A3%E8%B5%B7%E9%A3%9B',
-    kind: 'video',
-    major: true,
-    image: '/images/media-ohkf-video-1.jpg',
   },
   {
     id: 'hkust-lae-2025',
@@ -311,7 +272,7 @@ export const media: MediaItem[] = [
     },
     url: 'https://seng.hkust.edu.hk/zh-hant/news/20250320/government-launches-regulatory-sandbox-pilot-projects-hkust-foster-low-altitude-economy-and-innovative-industry-development',
     kind: 'article',
-    logo: '/logos/hkust.svg',
+    major: true,    logo: '/logos/hkust.svg',
     image: '/images/media-sandbox-1.jpg',
   },
   {
@@ -331,6 +292,7 @@ export const media: MediaItem[] = [
     url: 'https://www.instagram.com/reel/DFCLdvsNS3i/',
     kind: 'post',
     major: true,
+    logo: '/logos/unwire.png',
     image: '/images/media-ig-reel-1.jpg',
   },
   {
@@ -350,6 +312,7 @@ export const media: MediaItem[] = [
     url: 'https://resources.mpep.com.hk/news/8/55373',
     kind: 'article',
     major: true,
+    logo: '/logos/mingpao.png',
     image: '/images/media-mpep-1.jpg',
   },
   {
@@ -368,7 +331,6 @@ export const media: MediaItem[] = [
     },
     url: 'https://www.wenweipo.com/a/202501/16/AP678818f4e4b0ebdedfc24e59.html',
     kind: 'article',
-    major: true,
     logo: '/logos/wenweipo.png',
     image: '/images/media-lae-center-2.jpg',
   },
@@ -409,6 +371,7 @@ export const media: MediaItem[] = [
     url: 'https://www.hk01.com/%E5%B0%88%E4%B8%8A%E6%95%99%E8%82%B2/1094342/%E7%A7%91%E5%A4%A7%E6%88%90%E7%AB%8B%E4%BD%8E%E7%A9%BA%E7%B6%93%E6%BF%9F%E7%A0%94%E7%A9%B6%E4%B8%AD%E5%BF%83-%E5%B7%B2%E4%BA%A4%E7%9B%A3%E7%AE%A1%E6%B2%99%E7%9B%92%E7%94%B3%E8%AB%8B-%E7%A0%94%E7%84%A1%E4%BA%BA%E6%A9%9F%E7%B7%8A%E6%80%A5%E6%95%91%E6%8F%B4',
     kind: 'article',
     major: true,
+    logo: '/logos/hk01.png',
     image: '/images/media-hk01-lae-1.jpeg',
   },
   {
@@ -521,6 +484,7 @@ export const media: MediaItem[] = [
     },
     url: 'https://libguides.lb.polyu.edu.hk/i-Space/isvrc_chi',
     kind: 'article',
+    logo: '/logos/polyu.png',
     image: '/images/media-polyu-ispace-1.jpg',
   },
 ]

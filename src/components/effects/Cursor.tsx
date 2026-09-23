@@ -75,44 +75,77 @@ function cornerRadii(el: HTMLElement, w: number, h: number): number[] {
 
 /**
  * The element's own outline — border box WITH its border-radius — in viewport
- * coordinates. If the element has a transform (3D tilt, scale), every outline
- * point is projected through its transform matrix, so the ring traces the
- * exact visible shape, rounded corners included.
+ * coordinates. Every point is pushed through the FULL offsetParent chain:
+ * each ancestor's own transform (3D tilt, parallax, rotation, scale) is
+ * applied in turn, so the ring traces the exact visible shape even inside
+ * transformed/animated containers.
  */
+interface ChainLink {
+  m: DOMMatrix | null
+  ox: number
+  oy: number
+  lx: number
+  ly: number
+  sx: number
+  sy: number
+}
+
+function chainOf(el: HTMLElement): { chain: ChainLink[]; fixed: boolean } {
+  const chain: ChainLink[] = []
+  let fixed = false
+  let node: HTMLElement | null = el
+  while (node) {
+    const cs = getComputedStyle(node)
+    let m: DOMMatrix | null = null
+    let ox = 0
+    let oy = 0
+    if (cs.transform && cs.transform !== 'none') {
+      m = new DOMMatrix(cs.transform)
+      const [a, b] = cs.transformOrigin.split(' ').map(parseFloat)
+      ox = a || 0
+      oy = b || 0
+    }
+    chain.push({ m, ox, oy, lx: node.offsetLeft, ly: node.offsetTop, sx: node.scrollLeft, sy: node.scrollTop })
+    if (cs.position === 'fixed') fixed = true
+    node = node.offsetParent as HTMLElement | null
+  }
+  return { chain, fixed }
+}
+
+function applyLink(l: ChainLink, x: number, y: number): Pt {
+  let px = x
+  let py = y
+  if (l.m) {
+    const lx = px - l.ox
+    const ly = py - l.oy
+    const m = l.m
+    const w = m.m14 * lx + m.m24 * ly + m.m44 || 1
+    px = l.ox + (m.m11 * lx + m.m21 * ly + m.m41) / w
+    py = l.oy + (m.m12 * lx + m.m22 * ly + m.m42) / w
+  }
+  return { x: px + l.lx, y: py + l.ly }
+}
+
 function shapePoints(el: HTMLElement): Pt[] {
   const w = el.offsetWidth
   const h = el.offsetHeight
   const local = roundedRectSample(w, h, cornerRadii(el, w, h), N)
-  const t = getComputedStyle(el).transform
-  if (!t || t === 'none') {
-    const r = el.getBoundingClientRect()
-    return local.map((p) => ({ x: p.x + r.left, y: p.y + r.top }))
-  }
-  // untransformed border-box origin, in viewport coords
-  // (assumes no transformed ancestors, which holds for this site)
-  let x = el.offsetLeft
-  let y = el.offsetTop
-  let p = el.offsetParent as HTMLElement | null
-  let fixed = false
-  while (p) {
-    x += p.offsetLeft
-    y += p.offsetTop
-    if (getComputedStyle(p).position === 'fixed') fixed = true
-    p = p.offsetParent as HTMLElement | null
-  }
-  if (!fixed) {
-    x -= window.scrollX
-    y -= window.scrollY
-  }
-  const m = new DOMMatrix(t)
-  const cs = getComputedStyle(el)
-  const [ox, oy] = cs.transformOrigin.split(' ').map(parseFloat)
-  const project = (pt: Pt): Pt => {
-    const q = m.transformPoint(new DOMPoint(pt.x - ox, pt.y - oy))
-    const dw = q.w || 1
-    return { x: x + ox + q.x / dw, y: y + oy + q.y / dw }
-  }
-  return local.map(project)
+  const { chain, fixed } = chainOf(el)
+  return local.map((p) => {
+    let out = p
+    for (let i = 0; i < chain.length; i++) {
+      out = applyLink(chain[i], out.x, out.y)
+      // a scrollable parent shifts its content — including body as a
+      // scroll container (body overflow-x:hidden scrolls programmatically,
+      // which window.scrollX does NOT reflect)
+      const parent = chain[i + 1]
+      if (parent) out = { x: out.x - parent.sx, y: out.y - parent.sy }
+    }
+    if (!fixed) {
+      out = { x: out.x - window.scrollX, y: out.y - window.scrollY }
+    }
+    return out
+  })
 }
 
 /**
@@ -133,7 +166,7 @@ function visualShapeOf(target: HTMLElement): HTMLElement {
 /**
  * Custom cursor accent.
  * - A brand-colored dot glued to the pointer.
- * - A ring drawn as an SVG path through 48 sample points. Over interactive
+ * - A ring drawn as an SVG path through 64 sample points. Over interactive
  *   elements it becomes THAT element's own outline — same border, same
  *   border-radius, same live 3D tilt — traced point-by-point through the
  *   element's transform matrix. Shapes morph fluidly (per-point lerp).

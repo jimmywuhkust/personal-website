@@ -4,6 +4,7 @@ import { ArrowRight, ArrowDown, ArrowUpRight, ChevronDown, MapPin, Download } fr
 import { useLang } from '../i18n'
 import { getContent } from '../content'
 import ParticleField from '../components/effects/ParticleField'
+import FloatingGallery from '../components/effects/FloatingGallery'
 import Reveal from '../components/effects/Reveal'
 import Magnetic from '../components/effects/Magnetic'
 import TiltCard from '../components/effects/TiltCard'
@@ -34,8 +35,9 @@ export default function Home() {
           style={{ animationDelay: '-4s' }}
         />
         <ParticleField />
+        <FloatingGallery />
 
-        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-24 pt-28 sm:px-6">
+        <div className="pointer-events-none relative z-10 mx-auto w-full max-w-6xl px-4 pb-24 pt-28 sm:px-6">
           <Reveal>
             <p className="mb-4 flex items-center gap-2 text-sm uppercase tracking-[0.3em] text-[hsl(var(--brand))]">
               <MapPin size={14} /> {lt(profile.location)}
@@ -74,7 +76,7 @@ export default function Home() {
           </Reveal>
           <Reveal delay={400}>
             <div className="mt-10 flex flex-wrap items-center gap-4">
-              <Magnetic>
+              <Magnetic className="pointer-events-auto">
                 <Link
                   to="/projects"
                   className="group flex items-center gap-2 rounded-full bg-foreground px-6 py-3 font-medium text-background transition-transform hover:scale-105"
@@ -83,7 +85,7 @@ export default function Home() {
                   <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                 </Link>
               </Magnetic>
-              <Magnetic>
+              <Magnetic className="pointer-events-auto">
                 <a
                   href="/cv.pdf"
                   download
@@ -93,7 +95,7 @@ export default function Home() {
                 </a>
               </Magnetic>
               {profile.email && (
-                <Magnetic>
+                <Magnetic className="pointer-events-auto">
                   <a
                     href={`mailto:${profile.email}`}
                     className="flex items-center gap-2 rounded-full border border-border px-6 py-3 font-medium transition-colors hover:border-[hsl(var(--brand))] hover:text-[hsl(var(--brand))]"
