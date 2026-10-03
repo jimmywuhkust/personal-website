@@ -30,39 +30,6 @@ export const experience: Experience[] = [
     logo: '/logos/hkust.svg',
   },
   {
-    id: 'jinfinite',
-    role: { en: 'Founder', zhHant: '創辦人', zhHans: '创始人' },
-    org: {
-      en: 'Jinfinite Unlimited 駿步無限',
-      zhHant: '駿步無限公司 Jinfinite Unlimited',
-      zhHans: '骏步无限公司 Jinfinite Unlimited',
-    },
-    period: 'Mar 2023 — Present',
-    kind: 'work',
-  },
-  {
-    id: 'colku',
-    role: {
-      en: 'Graphic & Web Designer',
-      zhHant: '平面及網頁設計師',
-      zhHans: '平面及网页设计师',
-    },
-    org: { en: 'Colku Electric Appliance Co., Ltd.', zhHant: 'Colku Electric Appliance Co., Ltd.', zhHans: 'Colku Electric Appliance Co., Ltd.' },
-    period: 'Jun 2022 — Present',
-    kind: 'work',
-  },
-  {
-    id: 'entru',
-    role: {
-      en: 'Website Developer / Photo / Videographer',
-      zhHant: '網站開發 / 攝影 / 攝錄',
-      zhHans: '网站开发 / 摄影 / 摄像',
-    },
-    org: { en: 'ENTRU', zhHant: 'ENTRU', zhHans: 'ENTRU' },
-    period: 'Jan 2022 — Oct 2025',
-    kind: 'work',
-  },
-  {
     id: 'bsc-isd',
     role: {
       en: 'BSc in Integrative Systems and Design',
@@ -97,6 +64,39 @@ export const experience: Experience[] = [
     period: 'Oct 2021 — Mar 2023',
     kind: 'leadership',
     logo: '/logos/toastmasters.png',
+  },
+  {
+    id: 'jinfinite',
+    role: { en: 'Founder', zhHant: '創辦人', zhHans: '创始人' },
+    org: {
+      en: 'Jinfinite Unlimited 駿步無限',
+      zhHant: '駿步無限公司 Jinfinite Unlimited',
+      zhHans: '骏步无限公司 Jinfinite Unlimited',
+    },
+    period: 'Mar 2023 — Present',
+    kind: 'work',
+  },
+  {
+    id: 'colku',
+    role: {
+      en: 'Graphic & Web Designer',
+      zhHant: '平面及網頁設計師',
+      zhHans: '平面及网页设计师',
+    },
+    org: { en: 'Colku Electric Appliance Co., Ltd.', zhHant: 'Colku Electric Appliance Co., Ltd.', zhHans: 'Colku Electric Appliance Co., Ltd.' },
+    period: 'Jun 2022 — Present',
+    kind: 'work',
+  },
+  {
+    id: 'entru',
+    role: {
+      en: 'Website Developer / Photo / Videographer',
+      zhHant: '網站開發 / 攝影 / 攝錄',
+      zhHans: '网站开发 / 摄影 / 摄像',
+    },
+    org: { en: 'ENTRU', zhHant: 'ENTRU', zhHans: 'ENTRU' },
+    period: 'Jan 2022 — Oct 2025',
+    kind: 'work',
   },
   {
     id: 'slasher',
