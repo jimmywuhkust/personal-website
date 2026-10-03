@@ -1,9 +1,9 @@
 import type { Experience } from './types'
 
 /**
- * Work / leadership / volunteering experience.
+ * Work / leadership / volunteering / education — one timeline, newest first.
  * Source: linkedin.com/in/jimmy-wu-unlimited (Experience & Volunteering).
- * Newest first.
+ * `logo` points into public/logos/; omit it to show a monogram placeholder.
  */
 export const experience: Experience[] = [
   {
@@ -12,6 +12,22 @@ export const experience: Experience[] = [
     org: { en: 'AeroRelief', zhHant: 'AeroRelief', zhHans: 'AeroRelief' },
     period: 'Mar 2025 — Present',
     kind: 'work',
+  },
+  {
+    id: 'mphil-cse',
+    role: {
+      en: 'MPhil in Computer Science & Engineering',
+      zhHant: '計算機科學及工程 哲學碩士',
+      zhHans: '计算机科学及工程 哲学硕士',
+    },
+    org: {
+      en: 'The Hong Kong University of Science and Technology',
+      zhHant: '香港科技大學',
+      zhHans: '香港科技大学',
+    },
+    period: 'Sep 2025 — Present',
+    kind: 'education',
+    logo: '/logos/hkust.svg',
   },
   {
     id: 'jinfinite',
@@ -47,6 +63,22 @@ export const experience: Experience[] = [
     kind: 'work',
   },
   {
+    id: 'bsc-isd',
+    role: {
+      en: 'BSc in Integrative Systems and Design',
+      zhHant: '綜合系統與設計 理學士',
+      zhHans: '综合系统与设计 理学士',
+    },
+    org: {
+      en: 'The Hong Kong University of Science and Technology',
+      zhHant: '香港科技大學',
+      zhHans: '香港科技大学',
+    },
+    period: 'Sep 2021 — Nov 2025',
+    kind: 'education',
+    logo: '/logos/hkust.svg',
+  },
+  {
     id: 'isdss-president',
     role: { en: 'President', zhHant: '會長', zhHans: '会长' },
     org: {
@@ -56,6 +88,7 @@ export const experience: Experience[] = [
     },
     period: 'Mar 2022 — Mar 2023',
     kind: 'leadership',
+    logo: '/logos/hkust.svg',
   },
   {
     id: 'toastmasters',
@@ -63,6 +96,7 @@ export const experience: Experience[] = [
     org: { en: 'HKUST Toastmasters', zhHant: '科大演講會', zhHans: '科大演讲会' },
     period: 'Oct 2021 — Mar 2023',
     kind: 'leadership',
+    logo: '/logos/toastmasters.png',
   },
   {
     id: 'slasher',
@@ -86,6 +120,13 @@ export const experience: Experience[] = [
     kind: 'work',
   },
   {
+    id: 'munsang',
+    role: { en: 'Secondary Education', zhHant: '中學教育', zhHans: '中学教育' },
+    org: { en: 'Munsang College 民生書院', zhHant: '民生書院', zhHans: '民生书院' },
+    period: '— Jul 2019',
+    kind: 'education',
+  },
+  {
     id: 'hkfyg-mc',
     role: { en: 'Master of Ceremonies (MC)', zhHant: '活動司儀（MC）', zhHans: '活动司仪（MC）' },
     org: {
@@ -95,5 +136,6 @@ export const experience: Experience[] = [
     },
     period: 'Volunteering',
     kind: 'volunteer',
+    logo: '/logos/hkfyg.png',
   },
 ]

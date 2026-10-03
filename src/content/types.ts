@@ -113,7 +113,8 @@ export interface Experience {
   role: LText
   org: LText
   period: string // e.g. "Mar 2025 — Present"
-  kind: 'work' | 'leadership' | 'volunteer'
+  kind: 'work' | 'leadership' | 'volunteer' | 'education'
+  logo?: string // org/school logo in public/logos/; omit for a monogram placeholder
 }
 
 export interface Skill {

@@ -11,7 +11,15 @@ import TiltCard from '../components/effects/TiltCard'
 import ProjectCard from '../components/ProjectCard'
 import MediaTimeline from '../components/MediaTimeline'
 import PressStrip from '../components/PressStrip'
+import BrandLogo from '../components/BrandLogo'
 import { cn } from '@/lib/utils'
+
+const KIND_BADGE: Record<string, string> = {
+  education: 'border-[hsl(var(--brand-2)/0.5)] text-[hsl(var(--brand-2))]',
+  leadership: 'border-[hsl(var(--brand)/0.5)] text-[hsl(var(--brand))]',
+  work: 'border-border text-muted-foreground',
+  volunteer: 'border-border text-muted-foreground',
+}
 
 export default function Home() {
   const { t, lt, lang } = useLang()
@@ -152,7 +160,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ---------- EXPERIENCE ---------- */}
+      {/* ---------- EXPERIENCE & EDUCATION TIMELINE ---------- */}
       <section className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
         <Reveal className="mb-8">
           <h2 className="font-display text-3xl font-bold sm:text-4xl">
@@ -160,15 +168,34 @@ export default function Home() {
             <span className="text-gradient">.</span>
           </h2>
         </Reveal>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="relative pl-16">
+          <div className="absolute bottom-4 left-[21px] top-4 w-0.5 rounded bg-gradient-to-b from-[hsl(var(--brand))] via-[hsl(var(--brand-2)/0.6)] to-transparent" />
           {content.experience.map((e, i) => (
-            <Reveal key={e.id} delay={i * 60}>
-              <div className="glass-card flex items-start justify-between gap-4 p-5">
-                <div>
-                  <h3 className="font-display font-semibold leading-snug">{lt(e.role)}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{lt(e.org)}</p>
+            <Reveal key={e.id} delay={i * 50}>
+              <div className="group relative flex items-center gap-4 py-2.5">
+                <span className="absolute -left-16 flex h-11 w-11 items-center justify-center">
+                  <BrandLogo
+                    src={e.logo}
+                    name={lt(e.org)}
+                    size={44}
+                    className="rounded-full transition-transform duration-300 group-hover:scale-110 group-hover:border-[hsl(var(--brand))]"
+                  />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <h3 className="font-display font-semibold leading-snug">{lt(e.role)}</h3>
+                    <span
+                      className={cn(
+                        'rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider',
+                        KIND_BADGE[e.kind] ?? KIND_BADGE.work,
+                      )}
+                    >
+                      {t(`exp.${e.kind}`)}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{lt(e.org)}</p>
                 </div>
-                <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground">
+                <span className="hidden shrink-0 rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground sm:inline">
                   {e.period}
                 </span>
               </div>
